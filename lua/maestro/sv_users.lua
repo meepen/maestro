@@ -1,5 +1,7 @@
 maestro.users = {}
-maestro.users = maestro.load("users")
+maestro.load("users", function(u)
+	maestro.users = u
+end)
 
 function maestro.userrank(id, rank)
 	if rank then

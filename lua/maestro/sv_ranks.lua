@@ -1,8 +1,9 @@
 local ranks = {}
 local newfile
 util.AddNetworkString("maestro_ranks")
-
-ranks, newfile = maestro.load("ranks")
+maestro.load("ranks", function(rs, nf)
+	ranks, newfile = rs, nf
+end)
 for rank, tab in pairs(ranks) do
 	if tab.inherits and tab.inherits ~= rank then
 		setmetatable(tab.perms, {__index = ranks[tab.inherits].perms})

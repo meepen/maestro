@@ -1,4 +1,7 @@
-maestro.bans = maestro.load("bans")
+maestro.bans = {}
+maestro.load("bans", function(a)
+	maestro.bans = a
+end)
 
 function maestro.ban(id, time, reason)
 	local ply
