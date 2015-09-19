@@ -44,7 +44,7 @@ local function maim(mod, id1, id2, bypass)
     alert("\n\n", mod, " has been maimed by Maestro! Set maestro_maim to 0 to disable.\n\n")
 end
 hook.Add("InitPostEntity", "maestro_maim", function()
-    if FAdmin then
+    if FAdmin and false then
         maim("FAdmin", "fadmin", "fadmin")
     end
 

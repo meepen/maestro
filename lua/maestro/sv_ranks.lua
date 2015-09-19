@@ -12,6 +12,12 @@ function maestro.rankadd(name, inherits, perms)
 	perms = perms or {}
 	local r = {perms = perms, inherits = inherits, cantarget = "<#" .. name, canrank = "!>#" .. name, flags = {}}
 	ranks[name] = r
+	if name ~= "user" and name ~= "admin" and name ~= "superadmin" then
+		CAMI.RegisterUsergroup({
+			Name = name,
+			Inherits = inherits,
+		}, "maestro")
+	end
 	if inherits then
 		maestro.ranksetinherits(name, inherits)
 	else
@@ -30,6 +36,7 @@ function maestro.rankremove(name)
 		end
 	end
 	ranks[name] = nil
+	CAMI.UnregisterUsergroup(name)
 	maestro.saveranks()
 end
 function maestro.rankget(name)
@@ -166,6 +173,27 @@ function maestro.broadcastranks()
 	net.Broadcast()
 end
 
+for k, v in pairs(CAMI.GetUsergroups()) do
+	if ranks[v.name] then return end
+	maestro.rankadd(v.name, v.inherits)
+end
+maestro.hook("CAMI.OnUsergroupRegistered", "cami", function(group, source)
+	if source == "maestro" then return end
+	if ranks[v.name] then return end
+	maestro.rankadd(v.name, v.inherits)
+end)
+maestro.hook("CAMI.PlayerHasAccess", "cami", function(ply, priv)
+	local rank = maestro.userrank(ply)
+	if maestro.rankget(rank).perms[priv] then
+		return true
+	end
+end)
+maestro.hook("CAMI.SteamIDHasAccess", "cami", function(id, priv)
+	local rank = maestro.userrank(id)
+	if maestro.rankget(rank).perms[priv] then
+		return true
+	end
+end)
 maestro.load("ranks", function(val, newfile)
 	ranks = val
 	for rank, r in pairs(ranks) do
@@ -179,6 +207,10 @@ maestro.load("ranks", function(val, newfile)
 				return ranks[r.inherits].flags[key]
 			end
 		end})
+		CAMI.RegisterUsergroup({
+			Name = rank,
+			Inherits = r.inherits,
+		}, "maestro")
 	end
 	if newfile then
 		maestro.RESETRANKS()

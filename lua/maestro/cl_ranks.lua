@@ -14,6 +14,18 @@ net.Receive("maestro_ranks", function()
 		end})
 	end
 	maestro.ranks = ranks
+	for k, v in pairs(ranks) do
+		if CAMI.GetUsergroup(k) then continue end
+
+		CAMI.RegisterUsergroup({
+			Name = k,
+			Inherits = v.inherits,
+		}, "maestro")
+	end
+	for k, v in pairs(CAMI.GetUsergroups()) do
+		if ranks[k] then continue end
+		CAMI.UnregisterUsergroup(k, "maestro")
+	end
 end)
 
 function maestro.rankget(name)

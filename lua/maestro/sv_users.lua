@@ -15,6 +15,7 @@ function maestro.userrank(id, rank)
 		if not id then
 			return
 		end
+		local prevrank = maestro.userrank(id)
 		if IsValid(ply) then
 			if maestro.rankget(rank) and not maestro.rankget(rank).anonymous then
 				ply:SetNWString("rank", rank)
@@ -26,6 +27,9 @@ function maestro.userrank(id, rank)
 		maestro.users[id].rank = rank
 		if rank == "user" then
 			maestro.users[id] = nil
+		end
+		if IsValid(ply) then
+			CAMI.SignalUserGroupChanged(ply, prevrank, rank, "maestro")
 		end
 		maestro.save("users", maestro.users)
 	else
@@ -48,4 +52,9 @@ function maestro.RESETUSERS()
 	end
 	maestro.users = {}
 	maestro.save("users", maestro.users)
+end
+
+maestro.hook("CAMI.PlayerUsergroupChanged", "cami", function(ply, prevrank, rank, source)
+	if source == "maestro" then return end
+	maestro.userrank(ply, rank)
 end
