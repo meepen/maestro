@@ -29,6 +29,17 @@ function maestro.rankadd(name, inherits, perms)
 			Inherits = inherits,
 		}, "maestro")
 	end
+	setmetatable(r.perms, {__index = function(tab, key)
+		if name == "root" then return true end
+		if tab ~= ranks[r.inherits].perms then
+			return ranks[r.inherits].perms[key]
+		end
+	end})
+	setmetatable(r.flags, {__index = function(tab, key)
+		if tab ~= ranks[r.inherits].flags then
+			return ranks[r.inherits].flags[key]
+		end
+	end})
 	if inherits then
 		maestro.ranksetinherits(name, inherits)
 	else
@@ -155,32 +166,20 @@ function maestro.RESETRANKS()
 	maestro.rankflag("admin", "admin", true)
 maestro.rankadd("superadmin", "admin", {alias = true, armor = true, chatprint = true, cloak = true, fly = true, gimp = true, gimps = true, hp = true, ignite = true, map = true, play = true, ragdoll = true, scale = true, slap = true, spawn = true, strip = true, veto = true, vote = true, announce = true, blind = true, queue = true})
 	maestro.rankflag("superadmin", "superadmin", true)
-	if maestro.commands.kick then
-		local perms = {}
-		for cmd in pairs(maestro.commands) do
-			perms[cmd] = true
-		end
-		maestro.rankadd("root", "superadmin", perms)
-	else
-		maestro.hook("maestro_postpluginload", "root", function()
-			local perms = {}
-			for cmd in pairs(maestro.commands) do
-				perms[cmd] = true
-			end
-			maestro.rankadd("root", "superadmin", perms)
-		end)
-	end
+	maestro.rankadd("root", "superadmin", perms)
+	maestro.ranksetcantarget("root", "*")
+	maestro.ranksetcanrank("root", "*")
 end
 
 
 function maestro.sendranks(ply)
 	net.Start("maestro_ranks")
-		net.WriteMeepTable(ranks)
+		net.WriteTable(ranks)
 	net.Send(ply)
 end
 function maestro.broadcastranks()
 	net.Start("maestro_ranks")
-		net.WriteMeepTable(ranks)
+		net.WriteTable(ranks)
 	net.Broadcast()
 end
 
@@ -211,6 +210,7 @@ maestro.load("ranks", function(val, newfile)
 	ranks = val
 	for rank, r in pairs(ranks) do
 		setmetatable(r.perms, {__index = function(tab, key)
+			if rank == "root" then return true end
 			if tab ~= ranks[r.inherits].perms then
 				return ranks[r.inherits].perms[key]
 			end
