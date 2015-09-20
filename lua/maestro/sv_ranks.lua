@@ -2,15 +2,26 @@ local ranks = {}
 util.AddNetworkString("maestro_ranks")
 
 function maestro.saveranks()
-	maestro.save("ranks", ranks)
+	local copy = table.Copy(ranks)
+	for k, v in pairs(copy) do
+		if v.nosave then
+			copy[k] = nil
+		end
+	end
+	maestro.save("ranks", copy)
 	maestro.broadcastranks()
 end
 
 
 
 function maestro.rankadd(name, inherits, perms)
+	local nosave = false
+	if perms == true then
+		nosave = true
+		perms = {}
+	end
 	perms = perms or {}
-	local r = {perms = perms, inherits = inherits, cantarget = "<#" .. name, canrank = "!>#" .. name, flags = {}}
+	local r = {perms = perms, inherits = inherits, cantarget = "<#" .. name, canrank = "!>#" .. name, flags = {}, nosave = nosave}
 	ranks[name] = r
 	if name ~= "user" and name ~= "admin" and name ~= "superadmin" then
 		CAMI.RegisterUsergroup({
@@ -174,13 +185,15 @@ function maestro.broadcastranks()
 end
 
 for k, v in pairs(CAMI.GetUsergroups()) do
-	if ranks[v.name] then return end
-	maestro.rankadd(v.name, v.inherits)
+	print(1, v.Name)
+	if ranks[v.Name] then return end
+	maestro.rankadd(v.Name, v.Inherits, true)
 end
 maestro.hook("CAMI.OnUsergroupRegistered", "cami", function(group, source)
+	print(2, group.Name, source)
 	if source == "maestro" then return end
-	if ranks[v.name] then return end
-	maestro.rankadd(v.name, v.inherits)
+	if ranks[group.Name] then return end
+	maestro.rankadd(group.Name, group.Inherits, true)
 end)
 maestro.hook("CAMI.PlayerHasAccess", "cami", function(ply, priv)
 	local rank = maestro.userrank(ply)
@@ -207,10 +220,12 @@ maestro.load("ranks", function(val, newfile)
 				return ranks[r.inherits].flags[key]
 			end
 		end})
-		CAMI.RegisterUsergroup({
-			Name = rank,
-			Inherits = r.inherits,
-		}, "maestro")
+		if name ~= "user" and name ~= "admin" and name ~= "superadmin" then
+			CAMI.RegisterUsergroup({
+				Name = rank,
+				Inherits = r.inherits,
+			}, "maestro")
+		end
 	end
 	if newfile then
 		maestro.RESETRANKS()

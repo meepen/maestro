@@ -57,4 +57,4 @@ end
 maestro.hook("CAMI.PlayerUsergroupChanged", "cami", function(ply, prevrank, rank, source)
 	if source == "maestro" then return end
 	maestro.userrank(ply, rank)
-end
+end)
